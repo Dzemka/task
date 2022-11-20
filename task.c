@@ -18,7 +18,7 @@ void fill_country(t_country *country, char **argv, t_task *task)
 		country[j].count_city = (country[j].end_x - country[j].start_x) * (country[j].end_y - country[j].start_y);
 		country[j].count_day = 0;
 		country[j].full = 0;
-		country[j].count_money = malloc(sizeof(int) * task->country_count);
+		country[j].count_money = malloc(sizeof(int) * (task->country_count));
 		i += 5;
 	}
 	i = -1;
@@ -29,6 +29,7 @@ void fill_map(t_task *task)
 	int x;
 	int y;
 	int country_index;
+	int	i;
 
 	y = -1;
 	while (++y < task->height_map)
@@ -41,6 +42,7 @@ void fill_map(t_task *task)
 			task->map[y][x].count_money = malloc(sizeof(size_t) * (task->country_count + 1));
 			while (++country_index < task->country_count)
 			{
+				task->map[y][x].count_money[country_index] = 0;
 				if (x >= task->country[country_index].start_x && x <= task->country[country_index].end_x && y >= task->country[country_index].start_y && y <= task->country[country_index].end_y)
 				{
 					task->map[y][x].count_money[country_index] = 1000000;
@@ -56,9 +58,9 @@ void fill_map(t_task *task)
 		while (++x < task->width_map)
 		{
 			if (task->map[y][x].country_index != -1)
-				printf("%ld ", task->map[y][x].count_money[0]);
+				printf("%d			", task->map[y][x].country_index);
 			else
-				printf("-1 ");
+				printf("-1			");
 		}
 		printf("\n");
 	}
@@ -127,14 +129,14 @@ int is_full(t_task *task)
 	int y;
 	int i;
 	int j;
-	int count_motif;
+	int count_motif[task->country_count][task->country_count];
 	int count_fill_country;
 
 	i = -1;
 	while (++j < task->country_count)
 	{
 		while (++i < task->country_count)
-			task->country[j].count_money[i] = 0; // ne nado dadya nYA
+			count_motif[j][i] = 0;
 	}
 	y = -1;
 	while (++y < task->height_map)
@@ -154,29 +156,29 @@ int is_full(t_task *task)
 		}
 	}
 	i = -1;
-	count_fill_country = 0;
-	while (++i < task->country_count)
-	{
-		j = -1;
-		count_motif = 0;
-		while (++j < task->country_count)
-		{
-			// if (task->country[i].count_money[j] == 0)
-			// 	printf("country index %d motif index %d - ", i, j);
-			if (task->country[i].count_money[j] >= task->country[i].count_city)
-				count_motif++;
-		}
-		// printf("\n");
-		if (count_motif >= task->country_count)
-		{
-			task->country[i].full = 1;
-			count_fill_country++;
-		}
-	}
-		// exit(1);
+	// count_fill_country = 0;
+	// while (++i < task->country_count)
+	// {
+	// 	j = -1;
+	// 	count_motif = 0;
+	// 	while (++j < task->country_count)
+	// 	{
+	// 		// if (task->country[i].count_money[j] == 0)
+	// 		// 	printf("country index %d motif index %d - ", i, j);
+	// 		if (task->country[i].count_money[j] >= task->country[i].count_city)
+	// 			count_motif++;
+	// 	}
+	// 	// printf("\n");
+	// 	if (count_motif >= task->country_count)
+	// 	{
+	// 		task->country[i].full = 1;
+	// 		count_fill_country++;
+	// 	}
+	// }
+	// 	// exit(1);
 
-	if (count_fill_country >= task->country_count - 1)
-		return (1);
+	// if (count_fill_country >= task->country_count - 1)
+	// 	return (1);
 	// printf("%d\n", count_fill_country);
 	return (0);
 }
