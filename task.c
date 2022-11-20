@@ -15,13 +15,12 @@ void fill_country(t_country *country, char **argv, t_task *task)
 		country[j].start_y = atoi(argv[i + 2]);
 		country[j].end_x = atoi(argv[i + 3]);
 		country[j].end_y = atoi(argv[i + 4]);
-		country[j].count_city = (country[j].end_x - country[j].start_x) * (country[j].end_y - country[j].start_y);
+		country[j].count_city = (country[j].end_x - country[j].start_x + 1) * (country[j].end_y - country[j].start_y + 1);
 		country[j].count_day = 0;
 		country[j].full = 0;
 		country[j].count_money = malloc(sizeof(int) * (task->country_count));
 		i += 5;
 	}
-	printf("%d\n", country[1].end_y);
 }
 
 void fill_map(t_task *task)
@@ -29,7 +28,7 @@ void fill_map(t_task *task)
 	int x;
 	int y;
 	int country_index;
-	int	i;
+	int i;
 
 	y = -1;
 	while (++y < task->height_map)
@@ -51,20 +50,6 @@ void fill_map(t_task *task)
 			}
 		}
 	}
-	y = -1;
-	while (++y < task->height_map)
-	{
-		x = -1;
-		while (++x < task->width_map)
-		{
-			if (task->map[y][x].country_index != -1)
-				printf("%ld			", task->map[y][x].count_money[2]);
-			else
-				printf("-1			");
-		}
-		printf("\n");
-	}
-	exit(1);
 }
 
 void init_map(t_task *task)
@@ -82,7 +67,6 @@ void init_map(t_task *task)
 			task->height_map = task->country[i].end_y + 1;
 	}
 	task->map = malloc(sizeof(t_tile *) * (task->height_map + 1));
-	task->map[task->height_map] = NULL;
 	i = -1;
 	while (++i < task->height_map)
 		task->map[i] = malloc(sizeof(t_tile) * (task->width_map + 1));
@@ -91,12 +75,15 @@ void init_map(t_task *task)
 
 void transfer_money(t_tile *src, t_tile *dst, t_task *task)
 {
-	int i;
-	int transfer_coins;
+	int	i;
+	int	transfer_coins;
 
 	i = -1;
+	if (dst->country_index == -1 || src->country_index == -1)
+		return ;
 	while (++i < task->country_count)
 	{
+		printf("%ld\n", src->count_money[i]);
 		if (src->count_money[i] > 1000)
 		{
 			transfer_coins = src->count_money[i] / 1000;
@@ -111,11 +98,9 @@ void pass_coin(int x, int y, t_task *task)
 	t_tile *src;
 
 	src = &task->map[y][x];
-	if (src->country_index == -1)
-		return;
 	if (y - 1 > 0)
 		transfer_money(src, &task->map[y - 1][x], task);
-	if (y + 1 < task->country_count)
+	if (y + 1 < task->height_map)
 		transfer_money(src, &task->map[y + 1][x], task);
 	if (x - 1 > 0)
 		transfer_money(src, &task->map[y][x - 1], task);
@@ -131,10 +116,12 @@ int is_full(t_task *task)
 	int j;
 	int count_motif[task->country_count][task->country_count];
 	int count_fill_country;
+	int count_motif_on_country;
 
-	i = -1;
+	j = -1;
 	while (++j < task->country_count)
 	{
+		i = -1;
 		while (++i < task->country_count)
 			count_motif[j][i] = 0;
 	}
@@ -150,36 +137,32 @@ int is_full(t_task *task)
 				while (++i < task->country_count)
 				{
 					if (task->map[y][x].count_money[i] > 0)
-						task->country[task->map[y][x].country_index].count_money[i] += 1;
+						count_motif[task->map[y][x].country_index][i]++;
 				}
 			}
 		}
 	}
 	i = -1;
-	// count_fill_country = 0;
-	// while (++i < task->country_count)
-	// {
-	// 	j = -1;
-	// 	count_motif = 0;
-	// 	while (++j < task->country_count)
-	// 	{
-	// 		// if (task->country[i].count_money[j] == 0)
-	// 		// 	printf("country index %d motif index %d - ", i, j);
-	// 		if (task->country[i].count_money[j] >= task->country[i].count_city)
-	// 			count_motif++;
-	// 	}
-	// 	// printf("\n");
-	// 	if (count_motif >= task->country_count)
-	// 	{
-	// 		task->country[i].full = 1;
-	// 		count_fill_country++;
-	// 	}
-	// }
-	// 	// exit(1);
-
-	// if (count_fill_country >= task->country_count - 1)
-	// 	return (1);
-	// printf("%d\n", count_fill_country);
+	count_fill_country = 0;
+	while (++i < task->country_count)
+	{
+		count_motif_on_country = 0;
+		j = -1;
+		while (++j < task->country_count)
+		{
+			// printf("%d ",  task->country[i].count_money[j]);
+			if (count_motif[i][j] == task->country[i].count_city)
+				count_motif_on_country++;
+		}
+		// printf("\n");
+		if (count_motif_on_country == task->country_count)
+		{
+			task->country[i].full = 1;
+			count_fill_country++;
+		}
+	}
+	if (count_fill_country == task->country_count)
+		return (1);
 	return (0);
 }
 
@@ -196,14 +179,6 @@ void get_day_count(t_task *task)
 	end = 0;
 	while (!end)
 	{
-		i = -1;
-		while (++i < task->country_count)
-		{
-			if (task->country[i].full == 0)
-			{
-				task->country[i].count_day++;
-			}
-		}
 		y = -1;
 		while (++y < task->height_map)
 		{
@@ -212,18 +187,17 @@ void get_day_count(t_task *task)
 			{
 				pass_coin(x, y, task);
 				end = is_full(task);
-				if (task->map[y][x].country_index != -1)
-					printf("%ld	", task->map[y][x].count_money[0]);
-				else
-					printf("-1	");
+				if (end)
+					return;
 			}
-			printf("\n");
 		}
-		printf("========================\n");
+		i = -1;
+		while (++i < task->country_count)
+		{
+			if (task->country[i].full == 0)
+				task->country[i].count_day++;
+		}
 	}
-	i = -1;
-	while (++i < task->country_count)
-		printf("%d\n", task->country[i].count_day);
 }
 
 int main(int argc, char **argv)
@@ -246,4 +220,28 @@ int main(int argc, char **argv)
 	fill_country(task->country, argv, task);
 	init_map(task);
 	get_day_count(task);
+
+	int i;
+
+	i = -1;
+	while (++i < task->country_count)
+		printf("%d\n", task->country[i].count_day);
+	int x;
+	int y;
+	i = -1;
+	while (++i < task->country_count)
+	{
+		y = -1;
+		while (++y < task->height_map)
+		{
+			x = -1;
+			while (++x < task->width_map)
+			{
+				printf("%ld	", task->map[y][x].count_money[i]);
+			}
+			printf("\n");
+		}
+		printf("\n");
+	}
+	printf("========\n");
 }
