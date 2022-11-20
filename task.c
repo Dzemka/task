@@ -18,6 +18,7 @@ void fill_country(t_country *country, char **argv, t_task *task)
 		country[j].count_city = (country[j].end_x - country[j].start_x) * (country[j].end_y - country[j].start_y);
 		country[j].count_day = 0;
 		country[j].full = 0;
+		country[j].count_money = malloc(sizeof(int) * task->country_count);
 		i += 5;
 	}
 	i = -1;
@@ -108,46 +109,62 @@ void pass_coin(int x, int y, t_task *task)
 
 int is_full(t_task *task)
 {
-	int i;
-	int j;
-	int *count_full_city;
 	int x;
 	int y;
-	int res;
-	int full;
+	int i;
+	int j;
+	int count_motif;
+	int count_fill_country;
 
-	res = 0;
-	count_full_city = malloc(sizeof(int) * task->country_count);
 	i = -1;
+	while (++j < task->country_count)
+	{
+		while (++i < task->country_count)
+			task->country[j].count_money[i] = 0;
+	}
 	y = -1;
-	while (++i < task->country_count)
-		count_full_city[i] = 0;
 	while (++y < task->height_map)
 	{
 		x = -1;
 		while (++x < task->width_map)
 		{
-			if (task->map[y][x].count_money[i] > 0)
-				count_full_city[task->map[y][x].country_index] += 1;
+			if (task->map[y][x].country_index != -1)
+			{
+				i = -1;
+				while (++i < task->country_count)
+				{
+					if (task->map[y][x].count_money[i] > 0)
+						task->country[task->map[y][x].country_index].count_money[i] += 1;
+				}
+			}
 		}
 	}
 	i = -1;
+	count_fill_country = 0;
 	while (++i < task->country_count)
 	{
 		j = -1;
-		full = 0;
+		count_motif = 0;
 		while (++j < task->country_count)
 		{
-			if (count_full_city[i] >= task->country[j].count_city)
-			{
-				res = 1;
-				full++;
-			}
+			// if (task->country[i].count_money[j] == 0)
+			// 	printf("country index %d motif index %d - ", i, j);
+			if (task->country[i].count_money[j] >= task->country[i].count_city)
+				count_motif++;
 		}
-		if (full == task->country_count)
+		// printf("\n");
+		if (count_motif >= task->country_count)
+		{
 			task->country[i].full = 1;
+			count_fill_country++;
+		}
 	}
-	return (res);
+		// exit(1);
+
+	if (count_fill_country >= task->country_count - 1)
+		return (1);
+	// printf("%d\n", count_fill_country);
+	return (0);
 }
 
 void get_day_count(t_task *task)
@@ -160,7 +177,6 @@ void get_day_count(t_task *task)
 	int end;
 
 	i = -1;
-	y = -1;
 	end = 0;
 	while (!end)
 	{
@@ -168,8 +184,11 @@ void get_day_count(t_task *task)
 		while (++i < task->country_count)
 		{
 			if (task->country[i].full == 0)
+			{
 				task->country[i].count_day++;
+			}
 		}
+		y = -1;
 		while (++y < task->height_map)
 		{
 			x = -1;
@@ -177,8 +196,14 @@ void get_day_count(t_task *task)
 			{
 				pass_coin(x, y, task);
 				end = is_full(task);
+				if (task->map[y][x].country_index != -1)
+					printf("%ld	", task->map[y][x].count_money[0]);
+				else
+					printf("-1	");
 			}
+			printf("\n");
 		}
+		printf("========================\n");
 	}
 	i = -1;
 	while (++i < task->country_count)

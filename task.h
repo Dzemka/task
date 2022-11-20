@@ -11,6 +11,7 @@ typedef struct s_country
 	int		end_x;
 	int		end_y;
 	int		count_city;
+	int		*count_money;
 	int		count_day;
 	int		full;
 } t_country;
