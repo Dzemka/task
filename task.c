@@ -49,6 +49,20 @@ void fill_map(t_task *task)
 			}
 		}
 	}
+	y = -1;
+	while (++y < task->height_map)
+	{
+		x = -1;
+		while (++x < task->width_map)
+		{
+			if (task->map[y][x].country_index != -1)
+				printf("%ld ", task->map[y][x].count_money[0]);
+			else
+				printf("-1 ");
+		}
+		printf("\n");
+	}
+	exit(1);
 }
 
 void init_map(t_task *task)
@@ -120,7 +134,7 @@ int is_full(t_task *task)
 	while (++j < task->country_count)
 	{
 		while (++i < task->country_count)
-			task->country[j].count_money[i] = 0;
+			task->country[j].count_money[i] = 0; // ne nado dadya nYA
 	}
 	y = -1;
 	while (++y < task->height_map)
