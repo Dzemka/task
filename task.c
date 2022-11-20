@@ -21,7 +21,7 @@ void fill_country(t_country *country, char **argv, t_task *task)
 		country[j].count_money = malloc(sizeof(int) * (task->country_count));
 		i += 5;
 	}
-	i = -1;
+	printf("%d\n", country[1].end_y);
 }
 
 void fill_map(t_task *task)
@@ -58,7 +58,7 @@ void fill_map(t_task *task)
 		while (++x < task->width_map)
 		{
 			if (task->map[y][x].country_index != -1)
-				printf("%d			", task->map[y][x].country_index);
+				printf("%ld			", task->map[y][x].count_money[2]);
 			else
 				printf("-1			");
 		}
